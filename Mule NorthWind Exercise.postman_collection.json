@@ -1,0 +1,129 @@
+{
+	"info": {
+		"_postman_id": "92c47a28-b3bc-4f6e-a24c-32cfdbfdd30b",
+		"name": "Mule NorthWind Exercise",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1587688"
+	},
+	"item": [
+		{
+			"name": "POST A NorthWind Customer",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n        \"CustomerID\": \"IT-999448\",\r\n        \"CompanyName\": \"Crimson Hat \",\r\n        \"ContactName\": \"Mark Tweexer\",\r\n        \"ContactTitle\": \"Dr.\",\r\n        \"Address\": \"25, Flamingo Road\",\r\n        \"City\": \"San Francisco\",\r\n        \"Region\": \"California\",\r\n        \"Country\": \"IT\"\r\n    }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8081/api/customers",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"customers"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET All NorthWind Customers",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8081/api/customers",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"customers"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get A Single NorthWind Customer",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8081/api/customers/IT-999448",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"api",
+						"customers",
+						"IT-999448"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST a NorthWind Order",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"OrderID\": 2,\r\n  \"CustomerID\": \"IT-12345678\",\r\n  \"EmployeeID\": \"1234\",\r\n  \"OrderDate\": \"2022-10-19T07:43:29.751Z\",\r\n  \"RequiredDate\": \"2022-10-19T07:43:38.343Z\",\r\n  \"ShippedDate\": \"2022-10-19T07:43:38.343Z\",\r\n  \"ShipVia\": 1,\r\n  \"Freight\": 1,\r\n  \"ShipName\": \"Mike Tyson\",\r\n  \"ShipAddress\": \"Ganters Blvd 34\",\r\n  \"ShipCity\": \"Los Angeles\",\r\n  \"ShipRegion\": \"IL\",\r\n  \"ShipPostalCode\": \"01010\",\r\n  \"ShipCountry\": \"US\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8082/api/orders",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8082",
+					"path": [
+						"api",
+						"orders"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All NorthWind Orders",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8082/api/orders",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8082",
+					"path": [
+						"api",
+						"orders"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

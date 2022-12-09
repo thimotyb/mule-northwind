@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config_orders" doc:name="HTTP Listener config" doc:id="2c865fcd-71c5-422b-af30-8f409317ea7a" >
+		<http:listener-connection host="0.0.0.0" port="${http.port}" />
+	</http:listener-config>
+	<db:config name="NorthWind_Derby_Database" doc:name="Database Config" doc:id="debb8a39-97fd-40f9-a6ed-43b997c0d304" >
+		<db:derby-connection database="northwind" create="true" subsubProtocol="memory"/>
+	</db:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="9846798d-080d-4a0a-91af-42d9d6716cba" file="config.yaml" />
+	<http:request-config name="HTTP_Request_configuration_Customer_Sapi" doc:name="HTTP Request configuration" doc:id="0b01c83a-b30e-44e6-befc-364a223e9d7a" basePath="/api" >
+		<http:request-connection host="${customers.host}" port="${customers.port}" />
+	</http:request-config>
+</mule>

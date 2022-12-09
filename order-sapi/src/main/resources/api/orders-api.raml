@@ -1,0 +1,95 @@
+#%RAML 1.0
+title: New API
+types:
+  Order:
+    properties:
+      OrderID:
+        example: 1
+        type: number
+        format: int
+      CustomerID:
+        example: FI-12345678
+        type: string
+        minLength: 4
+        maxLength: 11
+        pattern: "[A-Z][A-Z]-[0-9]*"
+      EmployeeID:
+        example: Example
+        type: string
+      OrderDate:
+        example: 2022-10-19T07:43:29.751Z
+        type: datetime
+        format: rfc3339
+      RequiredDate:
+        example: 2022-10-19T07:43:38.343Z
+        type: datetime
+        format: rfc3339
+      ShippedDate?:
+        example: Example
+        type: string
+      ShipVia?:
+        example: 1
+        type: number
+        format: int
+      Freight?:
+        example: 1
+        type: number
+        format: float
+      ShipName?:
+        example: Example
+        type: string
+      ShipAddress?:
+        example: Example
+        type: string
+      ShipCity?:
+        example: Example
+        type: string
+      ShipRegion?:
+        example: Example
+        type: string
+      ShipPostalCode?:
+        example: Example
+        type: string
+      ShipCountry:
+        example: Example
+        type: string
+/orders:
+  get:
+    responses:
+      "200":
+        body:
+          application/json:
+            items:
+              type: Order
+  post:
+    body:
+      application/json:
+        type: Order
+    responses:
+      "201": {}
+      "400":
+        body:
+          application/json:
+            properties:
+              message:
+                example: The Customer iD is not valid
+                type: string
+/orders/{ID}:
+  get:
+    responses:
+      "200":
+        body:
+          application/json:
+            type: Order
+      "404":
+        body:
+          application/json:
+            properties:
+              message:
+                example: Order ID not found
+                type: string
+  uriParameters:
+    ID:
+      example: 1
+      type: number
+      format: int

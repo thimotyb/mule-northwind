@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:new-api="http://www.mulesoft.org/schema/mule/new-api" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/new-api http://www.mulesoft.org/schema/mule/new-api/current/mule-new-api.xsd">
+	<flow name="createOrderTables" doc:id="f9d5c41b-47fa-476c-af8a-25cfb490ebb3" >
+		<scheduler doc:name="Copy_of_Scheduler" doc:id="7ee31883-30c1-4751-a93c-47f2644d89b3" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="10000" timeUnit="DAYS" />
+			</scheduling-strategy>
+		</scheduler>
+		<db:execute-ddl doc:id="b4c4b67d-7109-48d9-b7a7-3c4184bf5919" config-ref="NorthWind_Derby_Database" doc:name="Copy_of_Execute DDL" >
+			<db:sql ><![CDATA[CREATE TABLE Orders (
+   Id INT NOT NULL,
+   CustomerID VARCHAR(255) NOT NULL,
+   EmployeeID VARCHAR(255) NOT NULL,
+   OrderDate DATE NOT NULL,
+   RequiredDate DATE,
+   ShippedDate DATE,
+   Via INT,
+   Freight DECIMAL,
+   Name VARCHAR(255),
+   Address VARCHAR(255),
+   City VARCHAR(255),
+   Region VARCHAR(255),
+   PostalCode VARCHAR(255),
+   Country VARCHAR(2),
+   PRIMARY KEY (Id)
+)]]></db:sql>
+		</db:execute-ddl>
+		<logger level="INFO" doc:name="Copy_of_Logger" doc:id="f19975dd-66f1-4b7b-98f8-6a2b13c6c292" message="** DATABASE TABLES CREATED" />
+	</flow>
+	<flow name="readAllOrders" doc:id="6ad5e5b2-8b3c-45bf-9c68-e10bbc6a1a31" >
+		<db:select doc:name="Select All Orders" doc:id="00836e78-fdd4-45b0-956a-cfaee59097d2" config-ref="NorthWind_Derby_Database" >
+			<db:sql ><![CDATA[SELECT * FROM Orders]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Copy_of_Transform Message" doc:id="e0868366-c702-441a-9122-8c7101d1dd14" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	OrderID: payload01.ID,
+	CustomerID: payload01.CUSTOMERID,
+	EmployeeID: payload01.EMPLOYEEID,
+	OrderDate: payload01.ORDERDATE,
+	RequiredDate: payload01.REQUIREDDATE,
+	ShippedDate: payload01.SHIPPEDDATE,
+	ShipVia: payload01.VIA,
+	Freight: payload01.FREIGHT,
+	ShipName: payload01.NAME,
+	ShipAddress: payload01.ADDRESS,
+	ShipCity: City: payload01.CITY,
+	ShipRegion: payload01.REGION,
+	ShipPostalCode: payload01.POSTALCODE,
+	ShipCountry: payload01.COUNTRY
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="postOrder" doc:id="631542aa-86f0-4acd-8db3-99396a74d773" >
+		<http:request method="GET" doc:name="Get A Customer" doc:id="d88ab639-54eb-4e52-9066-afbb64326256" config-ref="HTTP_Request_configuration_Customer_Sapi" path="/customers/{ID}" responseTimeout="600000" target="customer">
+			<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"ID" : payload.CustomerID
+}]]]></http:uri-params>
+		</http:request>
+		<choice doc:name="Choice" doc:id="b5a38e8e-14a3-4f8e-8030-6c80b4d66736" >
+			<when expression="#[not isEmpty(vars.customer)]">
+				<db:insert doc:name="Insert Order" doc:id="eb981f3d-649a-4baf-be18-54b6a604e03a" config-ref="NorthWind_Derby_Database">
+			<db:sql><![CDATA[INSERT INTO 
+Orders (Id,CustomerID,EmployeeID,OrderDate,RequiredDate,ShippedDate,Via,Freight,Name,Address,PostalCode,City,Region,Country) 
+VALUES (:id,:cid,:eid,:odate,:rdate,:sdate,:via,:fr,:name,:add,:post,:city,:reg,:cntry)
+]]></db:sql>
+			<db:input-parameters><![CDATA[#[%dw 2.0
+import * from dw::core::Strings
+---
+{ "id": payload.OrderID,
+	"cid": payload.CustomerID,
+	"eid": payload.EmployeeID,
+	"odate": substring(payload.OrderDate, 0, 10),
+	"rdate": substring(payload.RequiredDate, 0, 10),
+	"sdate": substring(payload.ShippedDate, 0, 10), 
+	"via": payload.Via,
+	"fr": payload.Freight,
+	"name": payload.ShipName,
+	"add": payload.ShipAddress,
+	"post": payload.ShipPostalCode,
+	"city": payload.ShipCity,
+	"reg": payload.ShipRegion,
+	"cntry": payload.ShipCountry
+}]]]></db:input-parameters>
+		</db:insert>
+				<ee:transform doc:name="Copy_of_Transform Message" doc:id="4503c343-c13c-4f36-9964-c6355836fc43">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Added " ++ (payload.affectedRows default "0") ++ " records."
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="374fec3d-cb00-443e-a2c3-c46668b0e661" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "The Customer ID could not be found."
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="404" doc:name="404 Not Found" doc:id="59ca7be4-14b2-41be-9037-e63dc1cfcb0e" variableName="httpStatus"/>
+			</otherwise>
+		</choice>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="bf39b463-dbe7-421f-9e33-bd72c8c81fb3" type="DB:BAD_SQL_SYNTAX, DB:QUERY_EXECUTION">
+				<ee:transform doc:name="Transform Message" doc:id="3991be5d-effc-4608-b0f1-c4d0793fef85" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Could not insert record: " ++ (error.description default "")
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="409" doc:name="409 Conflict" doc:id="fe7611cd-b9ad-42c3-8bcb-d6ccd1958732" variableName="httpStatus"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>

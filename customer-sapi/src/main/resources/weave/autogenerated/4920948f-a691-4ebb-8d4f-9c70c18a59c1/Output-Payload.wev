@@ -1,0 +1,14 @@
+%dw 2.0
+
+type auto_4920948f_a691_4ebb_8d4f_9c70c18a59c1_Output_Payload = {
+  CompanyName: String, 
+  Address: String, 
+  Region?: String, 
+  Country: String, 
+  CustomerID: String, 
+  City: String, 
+  ContactName: String, 
+  ContactTitle?: "Dr." | "Mr." | "Ms." | "Prof.", 
+  _?: Any
+} {"description": "The Customer (Captain Obvious)"}
+

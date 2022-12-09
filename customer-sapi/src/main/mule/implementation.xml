@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="postCustomer" doc:id="b7e1fd06-c94e-4c9f-9cd7-e48a57743a5e" >
+		<db:insert doc:name="Insert Customer" doc:id="e29c3b25-0ea1-4b0a-97ef-fb4106039b55" config-ref="NorthWind_Derby_Database" >
+			<db:sql ><![CDATA[INSERT INTO 
+Customer (Id,Company,Contact,Title,Address,City,Region,Country) 
+VALUES (:id,:cmp,:cnt,:tit,:add,:city,:reg,:cntry)
+]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{ "id": payload.CustomerID,
+	"cmp": payload.CompanyName,
+	"cnt": payload.ContactName,
+	"tit": payload.ContactTitle,
+	"add": payload.Address,
+	"city": payload.City,
+	"reg": payload.Region,
+	"cntry": payload.Country
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="91c099ba-b55e-4bf5-8050-273096264553" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Added " ++ (payload.affectedRows default "0") ++ " records."
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="createTables" doc:id="9411a5b6-7eff-42b7-be56-3a339df7030e" >
+		<scheduler doc:name="Scheduler" doc:id="1abfb34a-630c-4cb5-a9f6-fb77f0c7710c" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="10000" timeUnit="DAYS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<db:execute-ddl doc:name="Execute DDL" doc:id="4a9f1fed-0921-4dec-a2c2-9d31bce2229b" config-ref="NorthWind_Derby_Database">
+			<db:sql ><![CDATA[CREATE TABLE Customer (
+   Id VARCHAR(15) NOT NULL,
+   Company VARCHAR(255) NOT NULL,
+   Contact VARCHAR(255) NOT NULL,
+   Title VARCHAR(10),
+   Address VARCHAR(255),
+   City VARCHAR(255) NOT NULL,
+   Region VARCHAR(255),
+   Country VARCHAR(2) NOT NULL,
+   PRIMARY KEY (Id)
+)]]></db:sql>
+		</db:execute-ddl>
+		<logger level="INFO" doc:name="Logger" doc:id="ceedb5f2-3962-46cd-8c09-3dbbb37b895c" message="** DATABASE TABLES CREATED"/>
+	</flow>
+	<flow name="insertARecord" doc:id="3a1944d3-2118-428f-8ca1-2d0d8488bfab" >
+		<http:listener doc:name="Listener" doc:id="eeb9a4ad-4385-439d-b3d0-ca469d86fc25" config-ref="HTTP_Listener_config_customer" path="/insert"/>
+		<set-variable value="#[message.attributes.queryParams.id]" doc:name="Set Variable" doc:id="b16583e3-6817-4051-949c-17a30b98dbf1" variableName="customerid"/>
+		<db:insert doc:name="Insert" doc:id="cf65fe14-7219-4a4b-8d48-d80625b816d9" config-ref="NorthWind_Derby_Database">
+			<db:sql ><![CDATA[INSERT INTO 
+Customer (Id,Company,Contact,Title,Address,City,Region,Country) 
+VALUES (:id,:cmp,:cnt,:tit,:add,:city,:reg,:cntry)
+]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{ "id": vars.customerid,
+	"cmp": "My Company",
+	"cnt": "Jean Jeanette",
+	"tit": "Ms.",
+	"add": "Compton Road, 55",
+	"city": "London",
+	"reg": "N/A",
+	"cntry": "UK"
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="e4f06f25-f230-4f68-995a-5c3cd567f88c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Record added."
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getAllCustomers" doc:id="3bab1121-bc09-4b4e-a899-d3ae4306480a" >
+		<db:select doc:name="Select" doc:id="4dbdcb24-72b3-4d83-940a-d14a982a2115" config-ref="NorthWind_Derby_Database">
+			<db:sql ><![CDATA[SELECT * FROM Customer]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="17ca2082-f918-4eea-a3e1-6e070554966c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	CompanyName: payload01.COMPANY,
+	Address: payload01.ADDRESS,
+	Region: payload01.REGION,
+	Country: payload01.COUNTRY,
+	CustomerID: payload01.ID,
+	City: payload01.CITY,
+	ContactName: payload01.CONTACT,
+	ContactTitle: payload01.TITLE
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getACustomerByCustomerID" doc:id="4920948f-a691-4ebb-8d4f-9c70c18a59c1" >
+		<db:select doc:name="Select By CustomerID" doc:id="a3f6a814-a2fe-4551-b51c-67bca4be06ea" config-ref="NorthWind_Derby_Database" >
+			<db:sql ><![CDATA[SELECT * FROM Customer WHERE ID = :id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{ "id": vars.ID }]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Copy_of_Transform Message" doc:id="2f595172-62e3-4f6e-9697-45525113090c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	CompanyName: payload01.COMPANY,
+	Address: payload01.ADDRESS,
+	Region: payload01.REGION,
+	Country: payload01.COUNTRY,
+	CustomerID: payload01.ID,
+	City: payload01.CITY,
+	ContactName: payload01.CONTACT,
+	ContactTitle: payload01.TITLE
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="implementationFlow" doc:id="e298b11a-92b0-42ae-9a49-3eee3effd39d" >
+		<http:listener doc:name="HTTPS Test Listener" doc:id="a0ac8d54-d376-4a4b-b14c-f41beec23831" config-ref="HTTPS_Listener_server" path="/test"/>
+		<set-payload value='#[output application/json --- { "message": "HELLO FROM HTTPS!"}]' doc:name="Set Payload" doc:id="9c068a96-4ad6-4eae-888a-d1096ac368fc" />
+	</flow>
+</mule>

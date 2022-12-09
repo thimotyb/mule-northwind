@@ -1,0 +1,16 @@
+{
+  "OrderID": 1,
+  "CustomerID": "FI-12345678",
+  "EmployeeID": "1234",
+  "OrderDate": "2022-10-19T07:43:29.751Z",
+  "RequiredDate": "2022-10-19T07:43:38.343Z",
+  "ShippedDate": "2022-10-19T07:43:38.343Z",
+  "ShipVia": 1,
+  "Freight": 1,
+  "ShipName": "John Ryder",
+  "ShipAddress": "Ganters Blvd 34",
+  "ShipCity": "Milwaukee",
+  "ShipRegion": "IL",
+  "ShipPostalCode": "01010",
+  "ShipCountry": "US"
+}

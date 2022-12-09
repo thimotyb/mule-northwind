@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<munit:config name="implementation-test-suite.xml" />
+	<munit:before-suite name="implementation-test-suiteBefore_Suite" doc:id="feeb9824-3dd9-43a3-ab39-fa631dd12761" >
+		<flow-ref doc:name="create CUSTOMER table" doc:id="b2cab0fb-9401-4234-bd3d-fc9d75197cf0" name="createTables"/>
+	</munit:before-suite>
+	<munit:test name="implementation-test-suite-postCustomerTest" doc:id="65979398-b853-4490-991f-2e7ac437382b" description="Test">
+		<munit:behavior >
+			<munit:set-event doc:name="Set Event" doc:id="54eba5e2-be4b-4b69-a7dc-37e47768577c" >
+				<munit:payload value='#[output application/json&#10;---&#10;{&#10;        "CustomerID": "IT-999448",&#10;        "CompanyName": "Crimson Hat",&#10;        "ContactName": "Mark Tweexer",&#10;        "ContactTitle": "Dr.",&#10;        "Address": "25, Flamingo Road",&#10;        "City": "San Francisco",&#10;        "Region": "California",&#10;        "Country": "IT"&#10;    }]' mediaType="application/json" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to postCustomer" doc:id="7b3537e3-01d5-4334-b223-db47438f7702" name="post:\customers:application\json:customers-sapi-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="814436c9-58f1-473f-a30c-b5793f084d12" actual="#[payload]" expected='#[{&#10;    "message": "Added 1 records."&#10;}]' message="Failure for POST 1 sample customer record"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="getAllCustomers-test" doc:id="5f3b70e8-0a36-46c7-bacc-7176d4326852" >
+		<munit:behavior >
+			<munit:set-event doc:name="Set Input" doc:id="3bc0214a-962f-4c05-a3f5-be411a4373a7" >
+				<munit:payload value="#[readUrl('classpath://getAllCustomerstest\set-event_payload.dwl')]" encoding="UTF-8" />
+				<munit:attributes value="#[readUrl('classpath://getAllCustomerstest\set-event_attributes.dwl')]" />
+				<munit:variables >
+					<munit:variable key="outboundHeaders" value="#[readUrl('classpath://getAllCustomerstest\set-event_variable_.dwl')]" />
+				</munit:variables>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to getAllCustomers" doc:id="b3e8f4a1-ede0-4b8c-abe7-f92e754d0716" name="get:\customers:customers-sapi-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="aa935f03-7cea-45c1-96c4-2b21b7177fa4" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import getAllCustomerstest::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="implementation-test-suite-getACustomerByCustomerIDTest" doc:id="6ec03a3e-9357-4bbd-b7bb-04a2fae328e0" description="Test">
+		<munit:behavior >
+			<munit:set-event doc:name="Set Event" doc:id="93c8f6f4-cb79-4a67-93f3-ba0c7f755257" >
+				<munit:attributes value='#[{ queryParams: { id: "FI-12345678"}}]' />
+				<munit:variables >
+					<munit:variable key="ID" value="FI-12345678" />
+				</munit:variables>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="insertARecord" doc:id="efa7b643-09d9-49f1-80b4-186893a7e4be" name="insertARecord" target="result"/>
+			<flow-ref doc:name="Flow-ref to getACustomerByCustomerID" doc:id="d448e859-f4ad-41dc-8000-bbcb8e46a720" name="getACustomerByCustomerID"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="55774901-4c65-458a-869f-421a33725e6e" expression="#[payload.CustomerID]" is="#[MunitTools::notNullValue()]"/>
+			<db:execute-script doc:name="Execute script" doc:id="0b9592b2-6c62-4813-8d5b-364597dd7f9b" config-ref="NorthWind_Derby_Database" doc:description="I do this to ensure to clean the database after each test so that each new test starts from a clean condition">
+			<db:sql><![CDATA[TRUNCATE TABLE Customer]]></db:sql>
+		</db:execute-script>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

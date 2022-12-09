@@ -1,0 +1,6 @@
+http:
+  port: "8082"
+  
+customers:
+  host: "localhost"
+  port: "8081"

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="17c0b57f-9dfa-4608-be47-08cde5eeca9f" file="config.yaml" />
+	<http:listener-config name="HTTP_Listener_config_customer" doc:name="HTTP Listener config" doc:id="420c450d-9aad-4f43-9e5c-149a6b563f19" >
+		<http:listener-connection host="0.0.0.0" port="${http.port}" />
+	</http:listener-config>
+	<db:config name="NorthWind_Derby_Database" doc:name="Database Config" doc:id="e362cdc4-7b24-44a3-9a95-eb27ec397e92" >
+		<db:derby-connection database="northwind" create="true" subsubProtocol="memory"/>
+	</db:config>
+	<tls:context name="TLS_Context_server" doc:name="TLS Context" doc:id="dc14c5ad-5dab-46b1-8d8b-06a88870ed9f" >
+		<tls:key-store type="pkcs12" path="customerssapi.p12" alias="server" keyPassword="mule12345" password="mule12345" />
+	</tls:context>
+	<http:listener-config name="HTTPS_Listener_server" doc:name="HTTP Listener config" doc:id="9b2db253-6982-4aa8-802e-dcf7f690a449" >
+		<http:listener-connection protocol="HTTPS" host="0.0.0.0" port="${https.port}" tlsContext="TLS_Context_server" />
+	</http:listener-config>
+</mule>
